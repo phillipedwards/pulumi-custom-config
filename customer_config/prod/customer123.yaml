@@ -1,0 +1,5 @@
+config:
+  ec2:instance-type: t3.micro
+  ecs:desired-tasks: 3
+  db:database-engine: mysql
+  aws:region: us-west-2

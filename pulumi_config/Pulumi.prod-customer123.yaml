@@ -1,0 +1,3 @@
+config:
+  aws:region: us-west-1
+  vpc:vpcid: some-vpc-id

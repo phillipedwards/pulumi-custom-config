@@ -1,0 +1,7 @@
+name: pulumi-custom-config
+runtime:
+  name: python
+  options:
+    virtualenv: venv
+description: A minimal AWS Python Pulumi program
+config: ./pulumi_config
