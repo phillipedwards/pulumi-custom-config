@@ -1,14 +1,14 @@
 # Pulumi and Custom Configuration
 The purpose of this repository is to show an example of a user-defined configuration layer which can extend pulumi's configuration capabilities, by adding user-defined organization and options.
 
-For more information on getting started with pulumi, visit [https://www.pulumi.com/docs/get-started/].
+For more information on getting started with pulumi, visit [Get Started with Pulumi](https://www.pulumi.com/docs/get-started/).
 
 See the following links for more information about pulumi and it's out of the box configuration model.
-- [https://www.pulumi.com/docs/intro/concepts/config/]
-- [https://www.pulumi.com/docs/reference/pulumi-yaml/]
+- [Configuration Concepts](https://www.pulumi.com/docs/intro/concepts/config/)
+- [Pulumi YAML Reference](https://www.pulumi.com/docs/reference/pulumi-yaml/)
 
 **This user-defined custom config does not support pulumi secrets!!! You should continue to use pulumi's out of the box configuration that provides excellent support for secrets!
-[https://www.pulumi.com/docs/intro/concepts/secrets/]
+[YAY Secrets!](https://www.pulumi.com/docs/intro/concepts/secrets/)
 
 ### Why
 Pulumi configuration currently supports the use of a single yaml file, in a single location (Eg- Pulumi.stack.yaml). One cannot support a hierarchical configuration or organize individual stack configurations in a directory structure, without some effort.
