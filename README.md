@@ -54,4 +54,3 @@ customer_config
 |     |__customer-abc.yaml  
 |  
 |__defaults.yaml  
-
