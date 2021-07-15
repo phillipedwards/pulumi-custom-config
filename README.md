@@ -35,10 +35,10 @@ To allow this custom configuration to retrieve all configuration values, all sta
 {environment}-{customer} where environment is 'prod' or 'stage', in this case, and customer is whatever value you'd like to use to differentiate your 'customer'.
 
 For this example, we have defined our configuration system as follows:
-pulumi_config
-|
-|__Pulumi.my-stack.yaml
-
+pulumi_config  
+|  
+|__Pulumi.my-stack.yaml  
+|  
 customer_config  
 |  
 |__prod  
