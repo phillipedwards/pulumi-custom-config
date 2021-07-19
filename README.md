@@ -70,3 +70,4 @@ After adding the custom_config.py file to your solution, your directory should n
 
 Our project setup is now complete. Populate the necessary pulumi configuration files, execute ```pulumi up```, and see the different values retrieved! Using the output of our main.py file in this repo, the output looks as follows:
 
+![image](https://user-images.githubusercontent.com/25461821/126227537-5243641b-f1e5-4d06-8969-8960c872f365.png)
