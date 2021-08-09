@@ -21,7 +21,7 @@ Using an intermediary configuration layer, we will support hierarchical configur
 
 The custom_config will resolve configuration items through the following order:
 1. Look in the stack configuration in the environments/{env}/ directory.
-2. Look in the defaults.yaml file in the environments/{env} directory.
+2. Look in the defaults.yaml file in the environments/{env}/ directory.
 
 ## Getting Started
 We'll use a new pulumi python app to demonstrate how to use the custom_config. AWS will be the cloud provider used, however, this solution is not cloud provider specific.
