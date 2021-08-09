@@ -68,3 +68,9 @@ With a single stack tag and the stack name we can simplify our `up` and `preview
 - `pulumi up --config-file ./environments/$(pulumi stack tag get ks:env)/Pulumi.$(pulumi stack --stack-name).yaml`
 
 For every stack, you'll need to set a tag specifying the environment. Eg- `pulumi stack tag set ks:env sdlc` or `pulumi stack tag set {my_env_key} {my_env_value}`. You'll then be able to use the above up and preview calls without having to manually identify your stack configuration file! 
+
+## Steps to Create a New Stack
+1. Create your new stack. Make sure the naming schema follows the above mentioned schema. Eg- `pulumi stack init {env}-{customer_id}`
+2. Tag your stack with the environment tag. Eg- pulumi stack tag set ks:env sdlc | prod
+3. Navigate to the environment folder for your stack and create a new Pulumi config file. Eg- `cd ./environments/sdlc && pulumi config set some:key value` This will create a new Pulumi config file.
+4. From the root directory of your Pulumi project, execute `pulumi preview --config-file ./environments/$(pulumi stack tag get ks:env)/Pulumi.$(pulumi stack --stack-name).yaml`
