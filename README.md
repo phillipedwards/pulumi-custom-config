@@ -56,3 +56,15 @@ Wrapping up, we now must specify what config we want Pulumi to utilize when exec
 Populate the necessary pulumi configuration files, execute ```pulumi up```, and see the different values retrieved! Using the output of our main.py file in this repo, the output looks as follows:
 
 ![image](https://user-images.githubusercontent.com/25461821/128747536-89f5ac73-f02d-4ff6-9958-0e884a056361.png)
+
+## Simplifying Preview and Up Usage with Custom_Config
+After reading the above documentation, one thing you'll notice about this solution is the `--config-file` flag is now required when executing a `pulumi up` or `pulumi preview`. In addition to that flag, you'll also need to specify the stack configuration file Pulumi will use to read the necessary configuration values. You can certainly build that the path to the config file each time you execute an up or preview, however,  there are options to automating this step.
+
+### Using Stack Tags and Stack Name to Identify a Config File
+One option is to use a combination of stack tags and stack name to automatically identify the config file location to pass with the `--config-file` flag. The one requirement we haven't discussed is the stack tag. You can read more about stack tags [here](https://www.pulumi.com/docs/reference/cli/pulumi_stack_tag/).  
+
+With a single stack tag and the stack name we can simplify our `up` and `preview` commands by using:
+- `pulumi preview --config-file ./environments/$(pulumi stack tag get ks:env)/Pulumi.$(pulumi stack --stack-name).yaml`
+- `pulumi up --config-file ./environments/$(pulumi stack tag get ks:env)/Pulumi.$(pulumi stack --stack-name).yaml`
+
+For every stack, you'll need to set a tag specifying the environment. Eg- `pulumi stack tag set ks:env sdlc` or `pulumi stack tag set {my_env_key} {my_env_value}`. You'll then be able to use the above up and preview calls without having to manually identify your stack configuration file! 
