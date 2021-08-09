@@ -4,4 +4,3 @@ runtime:
   options:
     virtualenv: venv
 description: A minimal AWS Python Pulumi program
-config: ./pulumi_config

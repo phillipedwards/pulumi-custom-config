@@ -1,14 +1,16 @@
 
 import os
+import json
 from typing import Optional
 import pulumi
 import yaml
+
 
 class CustomConfig:
     """
     Below is an example of a user-defined config to be used with a pulumi python program. Only a handful of "get" methods have been
     re-created below and the rest would need to be written, as the need arises.
-    
+
     Note: this "config" is user-defined, so any schema/standard can be used to store the configuration items
     This example will use the pulumi standard of:
         config:
@@ -32,38 +34,42 @@ class CustomConfig:
             self.bag_name = bag_name
 
         stack = pulumi.get_stack()
-        stack_pieces = stack.split('-')
+        stack_pieces = stack.split("-")
         if len(stack_pieces) != 2:
-            raise Exception('Stack name must the format {stage}-{customer}')
+            raise Exception("Stack name must the format {stage}-{customer}")
 
-        customer_path = os.path.join(os.getcwd(), "customer_config")
-        if not os.path.exists(customer_path):
-            raise Exception(f'Customer config path at {customer_path} does not exist')
+        # should be "production" or "sdlc"
+        env = stack_pieces[0]
 
-        config_file = os.path.join(customer_path, stack_pieces[0], stack_pieces[1]) + ".yaml"
-        default_config_file = os.path.join(customer_path, 'default.yaml')
+        # should be "ks123" or some customer id
+        customer = stack_pieces[1]
 
-        pulumi.log.debug(f'Loading configuration file from {config_file}')
-        with open(config_file) as file:
-            self.config = yaml.full_load(file)
+        pulumi.log.debug(f"Calculated environment: {env}")
+        pulumi.log.debug(f"Calculated customer: {customer}")
 
-        """follow pulumi's yaml configuration schema, if its configured as such"""
-        if 'config' in self.config:
-            self.config = self.config['config']
+        # path should endup being ~/environments/production or ~/environments/sdlc
+        env_path = os.path.join(os.getcwd(), "environments", env)
+        pulumi.log.debug(f"Calculated full environment path: {env_path}")
+
+        if not os.path.exists(env_path):
+            raise Exception(f"Environments config path at {env_path} does not exist")
+
+        default_config_file = os.path.join(env_path, "defaults.yaml")
 
         if os.path.exists(default_config_file):
-            pulumi.log.debug(f'Loading configuration file from {default_config_file}')
+            pulumi.log.debug(f"Loading defaults configuration file from {default_config_file}")
             with open(default_config_file) as file:
                 self.default_config = yaml.full_load(file)
 
-                if  'config' in self.default_config:
-                    self.default_config = self.default_config['config']
+                if "config" in self.default_config:
+                    self.default_config = self.default_config["config"]
 
+        """load an instance of the Pulumi standard config"""
         if bag_name:
-            pulumi.log.debug(f'pulumi config loaded for bag {bag_name}')
+            pulumi.log.debug(f"pulumi config loaded for bag {bag_name}")
             self.pulumi_config = pulumi.Config(bag_name)
         else:
-            pulumi.log.debug('pulumi config loaded with no bag name')
+            pulumi.log.debug("pulumi config loaded with no bag name")
             self.pulumi_config = pulumi.Config()
 
     def _get_full_key(self, key) -> str:
@@ -73,31 +79,40 @@ class CustomConfig:
         """
         returns an option boolean value from configuration
         """
-
         value = self._get_value(key)
         if value is None:
             return None
-        if value in ['True', 'true']:
+        if str(value) in ['True', 'true']:
             return True
-        if value in ['False', 'false']:
+        if str(value) in ['False', 'false']:
             return False
 
-        raise Exception(f'Configuration {key} value {value} is not a valid boolean')
+        raise self._config_type_error(key, value, bool)
 
-    def get_string(self, key) -> Optional[str]: 
+    def require_boolean(self, key) -> bool:
+        """
+        returns a boolean value if key is found or exception if not
+        """
+        value = self.get_boolean(key)
+        if value is None:
+            raise self._missing_value_error(key)
+
+        return value
+
+    def get_string(self, key) -> Optional[str]:
         """
         returns an optional string value from configuration
         """
-        return self._get_value(key )
+        return self._get_value(key)
 
     def require_string(self, key) -> str:
         """
-        returns a string value if configuration item is found by key or exception if not
+        returns a string value if key is found by key or exception if not
         """
         value = self.get_string(key)
         if value is None:
-            raise self._missing_value(key)
-        
+            raise self._missing_value_error(key)
+
         return value
 
     def get_float(self, key) -> Optional[float]:
@@ -107,59 +122,102 @@ class CustomConfig:
         value = self._get_value(key)
         if value is None:
             return None
-        
+
         try:
             return float(value)
         except Exception as e:
-            raise self._config_type_error(key, value, type(float)) from e
+            raise self._config_type_error(key, value, float) from e
 
     def require_float(self, key) -> float:
         """
-        returns a float value if configuration item is found by key or exception if not
+        returns a float value if key is found by key or exception if not
         """
         value = self.get_float(key)
         if value is None:
-            raise self._missing_value(key)
+            raise self._missing_value_error(key)
+
+        return value
 
     def get_int(self, key) -> Optional[int]:
+        """
+        returns an optional integer value from configuration
+        """
         value = self._get_value(key)
         if value is None:
             return None
-    
+
         try:
             return int(value)
         except Exception as e:
-            raise self._config_type_error(key, value, type(int)) from e
+            raise self._config_type_error(key, value, int) from e
 
+    def require_int(self, key) -> int:
+        """
+        returns an integer value if key is found or exception if not
+        """
+
+        value = self.get_int(key)
+        if value is None:
+            raise self._missing_value_error(key)
+
+        return value
+
+    def get_object(self, key):
+        """
+        returns an optional object value from configuration
+        """
+
+        value = self._get_value(key)
+        if value is None:
+            return None
+
+        try:
+            return json.loads(value)
+        except Exception as e:
+            raise self._config_type_error(key, value, object) from e
+        
+
+    def require_object(self, key):
+        """
+        returns an integer value if key is found or exception if not
+        """
+
+        value = self.get_object(key)
+        if value is None:
+            raise self._missing_value_error(key)
+        
+        return value
 
     def _get_value(self, key) -> Optional[str]:
         """
         Hierarchy goes as follows: 
-            1. check stack specific config
-            2. check stack specific config using "config" dictionary item
-            3. check config used by pulumi CLI
+            1. check stack specific config per environment. eg- /environments/prod/Pulumi.prod-ks123.yaml, which should be config used by CLI
+            2. check defaults config per environment. eg- /environments/prod/defaults.yaml
         """
 
         """look for our key in the stack specific config defined for our customer"""
         full_key = self._get_full_key(key)
-        if full_key in self.config:
-            pulumi.log.debug(f'Retrieving key {full_key} from stack config for specific customer')
 
-            return self.config[full_key]
+        """look in the stack specific config for our key"""
+        value = self.pulumi_config.get(key)
+        if value:
+            pulumi.log.debug(f"Retrieving key {full_key} from Pulumi configuration file")
+
+            return value
 
         """next look to our 'default' config defined in our customer directory"""
         if full_key in self.default_config:
-            pulumi.log.debug(f'Retrieving key {full_key} from defaul.yaml config')
+            pulumi.log.debug(f"Retrieving key {full_key} from defaul.yaml config")
 
             return self.default_config[full_key]
 
-        """finally, look to the pulumi-stack specific config for the key. This is our last hope"""
-        pulumi.log.debug(f'Retrieving key {full_key} from pulumi config')
-        
-        return self.pulumi_config.get(key)       
+        """finally, we did not find a key in either our Pulumi.{customer}.yaml file or our defaults.yaml file, so return None"""
+        pulumi.log.debug(f"Value for configuration key {full_key} not found!")
 
-    def _missing_value_error(key) -> Exception:
-        return Exception(f'Key {key} is missing from configuration file')
+        return None
 
-    def _config_type_error(key, value, type) -> Exception:
-        return Exception(f'Configuration {key} value {value} is not a valid {type}')
+    def _missing_value_error(self, key) -> Exception:
+        return Exception(f"Key {key} is missing from configuration file")
+
+    def _config_type_error(self, key, value, type) -> Exception:
+        return Exception(f"Configuration key {key} value '{value}' is not a valid {type}")
