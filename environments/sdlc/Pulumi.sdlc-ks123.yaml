@@ -1,0 +1,4 @@
+config:
+  aws:region: us-west-2
+  ec2:instance-type: "t2.micro"
+  ec2:tags: '{"env": "sdls", "customer": "ks123"}'

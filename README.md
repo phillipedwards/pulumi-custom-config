@@ -19,10 +19,9 @@ To support hierarchical configuration or directory organization, we'd need to wr
 ### How
 Using an intermediary configuration layer, we will support hierarchical configuration, organization of our stack configuratiions, and multi-tenant configurations. This configuration layer will wrap the existing configuration model and automatically search for configuration keys in other stack specific files.
 
-The custom_config file will resolve configuration items through the following order:
-1. Look in the stack configuration in the customer_config/{environment} directory.
-2. Look in the defaults.yaml file in the customer_config directory.
-3. Look in the stack configuration in the pulumi_config directory.
+The custom_config will resolve configuration items through the following order:
+1. Look in the stack configuration in the environments/{env}/ directory.
+2. Look in the defaults.yaml file in the environments/{env}/ directory.
 
 ## Getting Started
 We'll use a new pulumi python app to demonstrate how to use the custom_config. AWS will be the cloud provider used, however, this solution is not cloud provider specific.
@@ -30,44 +29,48 @@ We'll use a new pulumi python app to demonstrate how to use the custom_config. A
 ```mkdir pulumi_custom_config && cd pulumi_custom_config```  
 ```pulumi new aws-python```  
 
-Walk through the interactive CLI prompt and fill out, as you need. Most importantly to the custom_config, name your stack in the following scheme: {environment}-{customer_identifier}. Eg- dev-cust123 or test-cust123 or prod-custabc. The environment name should be one of: dev, test, stage, prod. customer_identifier can be any user defined ID that fits your needs.
+Walk through the interactive CLI prompt and fill out, as you need. Most importantly to the custom_config, your stack must be named following a specific scheme and your stack configuration file must be located in a unique directory. 
+- Stack name must be in the following scheme: {environment}-{customer-id} where environment is either 'prod' or 'sdlc' and customer-id is a user chosen value. Eg- 'sdlc-ks123'.
+- Stack configuration file must be located in a directory that corresponds to the environment portion, in the stack name. Eg- if the stack name is sdlc-ks123, the `Pulumi.sdlc-ks123.yaml` file must be located at: `./environments/sdlc/Pulumi.sdlc-ks123.yaml`.
 
-Assuming we added two stacks, prod-customer123 and stage-customer123 your dashboard on app.pulumi.com should look like:
+Assuming we added two stacks, prod-customer123 and sdlc-customer123 your dashboard on app.pulumi.com should look like:
 
-![Screen Shot 2021-07-19 at 9 59 53 AM](https://user-images.githubusercontent.com/25461821/126201592-8c058ecb-706a-4d5b-bffd-4b5c1efb4fca.png)
+![image](https://user-images.githubusercontent.com/25461821/128745949-62c144bb-4548-49d0-8d16-eab440f2be8b.png)
 
 The next step is we need to make a couple of changes to our project structure. Our current project structure should look like this:
 
-![Screen Shot 2021-07-19 at 10 58 02 AM](https://user-images.githubusercontent.com/25461821/126221918-32d5b02f-65f1-45a5-9f3f-b7776dcbe100.png)
+![image](https://user-images.githubusercontent.com/25461821/128745809-9435fabb-bf4d-41b8-b84c-853c28ab38af.png)
 
-We need to alter our project directory, by creating 2 new folders at the root of our pulumi project. Create 'pulumi_config' and 'customer_config'. After the directory should look like this:
+Notice the `environments` directory. This directory should have a sub-directory for each `environment` you wish to support per stack. Eg- prod and sdlc. Expanded view should look like:
 
-![image](https://user-images.githubusercontent.com/25461821/126225592-339bc450-296b-46b6-9800-6beea52c2a65.png)
+![image](https://user-images.githubusercontent.com/25461821/128746148-7c2ef4dd-325d-41d7-9567-6dc04e1961ee.png)
 
-As the number of stacks in a pulumi project grows, it can be helpful to locate all stack configs in a directory of its own. Next, go ahead and move both stacks yaml files into the pulumi_config directory. Our directory should now look like:
+The last configuration step in this process is optional. In each `environment` directory located in `environments`, you can create a defaults.yaml configuration file which can be used to store common configuration items, for a specific environment. These would be common reusable values all stacks in an environment share.
 
-![image](https://user-images.githubusercontent.com/25461821/126223060-baf9bb8f-421a-401c-84f6-d3ac2f5ea8db.png)
+Our project setup is now complete. Before we execute a `pulumi up` or `pulumi preview`, we need to account for one details. The Pulumi CLI, be default, looks in the root directory of the Pulumi project for a stack configuration file. For example, if the stack is named `sdlc-ks123` the Pulumi CLI will look for a yaml file named `Pulumi.sdlc-ks123.yaml` located in the root directory of the project. If this file is not found, an error will be experienced.
 
-We have two more steps to make this solution complete. First we will tell the pulumi program to look for a stacks yaml config file in the pulumi_config directory and second we will create our user-defined, custom yaml config files.
+To accomodate for our custom configuration directories, we will take advantage of an optional flag/parameter Pulumi allows when using `preview` or `up`, the `--config-file` flag. According to [pulumi docs](https://www.pulumi.com/docs/reference/cli/pulumi_preview/) the flag allows _"Use the configuration values in the specified file rather than detecting the file name"_
 
-**NOTE**: each new stack you create should have a pulumi configuration file located in the pulumi_config directory. These config files should contain a minimum amount of information in order for pulumi to successfully run. For example, config items like aws:region should be located here.
+Wrapping up, we now must specify what config we want Pulumi to utilize when executing an `up` or `preview`. For example, using the `sdlc-ks123` stack, we would exeucte a `preview` with `pulumi preview --config-file ./environments/sdlc/Pulumi.sdlc-123.yaml`.
 
-In the root of the pulumi project, open the Pulumi.yaml file. You can read more about the 'config' option in [pulumi configuration](https://www.pulumi.com/docs/reference/pulumi-yaml/), but we need to insert the following: ```config: ./pulumi_config```. This will tell the pulumi CLI to look in the pulumi_config directory for a stack's configuration.
+Populate the necessary pulumi configuration files, execute ```pulumi up```, and see the different values retrieved! Using the output of our main.py file in this repo, the output looks as follows:
 
-Your Pulumi.yaml file should now look like:
+![image](https://user-images.githubusercontent.com/25461821/128747536-89f5ac73-f02d-4ff6-9958-0e884a056361.png)
 
-![image](https://user-images.githubusercontent.com/25461821/126223596-e44a6419-c367-48ad-94fc-7a6ba1fdbd59.png)
+## Simplifying Preview and Up Usage with Custom_Config
+After reading the above documentation, one thing you'll notice about this solution is the `--config-file` flag is now required when executing a `pulumi up` or `pulumi preview`. In addition to that flag, you'll also need to specify the stack configuration file Pulumi will use to read the necessary configuration values. You can certainly build that the path to the config file each time you execute an up or preview, however,  there are options to automating this step.
 
-The last item of this solution is creating user-defined configurations for each of our stacks. These stack configurations are organized in an environment specific fashion, which helps minimize the possibility of human error while maximizing ease of use. We will create two files, with the same name, and place one in a prod directory and one in a stage directory. You're project should now look like:
+### Using Stack Tags and Stack Name to Identify a Config File
+One option is to use a combination of stack tags and stack name to automatically identify the config file location to pass with the `--config-file` flag. The one requirement we haven't discussed is the stack tag. You can read more about stack tags [here](https://www.pulumi.com/docs/reference/cli/pulumi_stack_tag/).  
 
-![image](https://user-images.githubusercontent.com/25461821/126223978-9024cb0e-3dc4-4e86-949f-964913bd1481.png)
+With a single stack tag and the stack name we can simplify our `up` and `preview` commands by using:
+- `pulumi preview --config-file ./environments/$(pulumi stack tag get ks:env)/Pulumi.$(pulumi stack --stack-name).yaml`
+- `pulumi up --config-file ./environments/$(pulumi stack tag get ks:env)/Pulumi.$(pulumi stack --stack-name).yaml`
 
-The last configuration step in this process is optional. In the customer_config directory, you can create a defaults.yaml configuration file which can be used to store common configuration items, between stacks.
+For every stack, you'll need to set a tag specifying the environment. Eg- `pulumi stack tag set ks:env sdlc` or `pulumi stack tag set {my_env_key} {my_env_value}`. You'll then be able to use the above up and preview calls without having to manually identify your stack configuration file! 
 
-After adding the custom_config.py file to your solution, your directory should now be complete and look like:
-
-![image](https://user-images.githubusercontent.com/25461821/126224483-cbe28591-0e22-4ed1-b401-9989db5b9ed7.png)
-
-Our project setup is now complete. Populate the necessary pulumi configuration files, execute ```pulumi up```, and see the different values retrieved! Using the output of our main.py file in this repo, the output looks as follows:
-
-![image](https://user-images.githubusercontent.com/25461821/126227537-5243641b-f1e5-4d06-8969-8960c872f365.png)
+## Steps to Create a New Stack
+1. Create your new stack. Make sure the naming schema follows the above mentioned schema. Eg- `pulumi stack init {env}-{customer_id}`
+2. Tag your stack with the environment tag. Eg- pulumi stack tag set ks:env sdlc | prod
+3. Navigate to the environment folder for your stack and create a new Pulumi config file. Eg- `cd ./environments/sdlc && pulumi config set some:key value` This will create a new Pulumi config file.
+4. From the root directory of your Pulumi project, execute `pulumi preview --config-file ./environments/$(pulumi stack tag get ks:env)/Pulumi.$(pulumi stack --stack-name).yaml`

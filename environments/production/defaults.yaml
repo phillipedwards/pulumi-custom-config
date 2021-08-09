@@ -2,3 +2,4 @@ config:
   vpc:subnetids: [subnet1,subnet2,subnet3]
   ecs:cpu: 512
   ecs:memory: 1024
+  ec2:instance-type: t2.large

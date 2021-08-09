@@ -1,0 +1,7 @@
+config:
+  vpc:vpcids: [vpc1,vpc2,vpc3]
+  ecs:cpu: 256
+  ecs:memory: 512
+  vpc:subnet-ids: '["sub123", "sub456", "sub789"]'
+  vpc:is-public-facing: true
+  ec2:ami-id: ami-id-123
