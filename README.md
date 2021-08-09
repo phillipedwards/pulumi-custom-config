@@ -19,10 +19,9 @@ To support hierarchical configuration or directory organization, we'd need to wr
 ### How
 Using an intermediary configuration layer, we will support hierarchical configuration, organization of our stack configuratiions, and multi-tenant configurations. This configuration layer will wrap the existing configuration model and automatically search for configuration keys in other stack specific files.
 
-The custom_config file will resolve configuration items through the following order:
-1. Look in the stack configuration in the customer_config/{environment} directory.
-2. Look in the defaults.yaml file in the customer_config directory.
-3. Look in the stack configuration in the pulumi_config directory.
+The custom_config will resolve configuration items through the following order:
+1. Look in the stack configuration in the environments/{env}/ directory.
+2. Look in the defaults.yaml file in the environments/{env} directory.
 
 ## Getting Started
 We'll use a new pulumi python app to demonstrate how to use the custom_config. AWS will be the cloud provider used, however, this solution is not cloud provider specific.
@@ -30,9 +29,11 @@ We'll use a new pulumi python app to demonstrate how to use the custom_config. A
 ```mkdir pulumi_custom_config && cd pulumi_custom_config```  
 ```pulumi new aws-python```  
 
-Walk through the interactive CLI prompt and fill out, as you need. Most importantly to the custom_config, name your stack in the following scheme: {environment}-{customer_identifier}. Eg- dev-cust123 or test-cust123 or prod-custabc. The environment name should be one of: dev, test, stage, prod. customer_identifier can be any user defined ID that fits your needs.
+Walk through the interactive CLI prompt and fill out, as you need. Most importantly to the custom_config, your stack must be named following a specific scheme and your stack configuration file must be located in a unique directory. 
+- Stack name must be in the following scheme: {environment}-{customer-id} where environment is either 'prod' or 'sdlc' and customer-id is a user chosen value. Eg- 'sdlc-ks123'.
+- Stack configuration file must be located in a directory that corresponds to the environment portion, in the stack name. Eg- if the stack name is sdlc-ks123, the `Pulumi.sdlc-ks123.yaml` file must be located at: `./environments/sdlc/Pulumi.sdlc-ks123.yaml`.
 
-Assuming we added two stacks, prod-customer123 and stage-customer123 your dashboard on app.pulumi.com should look like:
+Assuming we added two stacks, prod-customer123 and sdlc-customer123 your dashboard on app.pulumi.com should look like:
 
 ![Screen Shot 2021-07-19 at 9 59 53 AM](https://user-images.githubusercontent.com/25461821/126201592-8c058ecb-706a-4d5b-bffd-4b5c1efb4fca.png)
 
