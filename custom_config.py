@@ -75,7 +75,7 @@ class CustomConfig:
     def _get_full_key(self, key) -> str:
         return f'{self.bag_name}:{key}'
 
-    def get_boolean(self, key) -> Optional[bool]:
+    def get_bool(self, key) -> Optional[bool]:
         """
         returns an option boolean value from configuration
         """
@@ -89,27 +89,27 @@ class CustomConfig:
 
         raise self._config_type_error(key, value, bool)
 
-    def require_boolean(self, key) -> bool:
+    def require_bool(self, key) -> bool:
         """
         returns a boolean value if key is found or exception if not
         """
-        value = self.get_boolean(key)
+        value = self.get_bool(key)
         if value is None:
             raise self._missing_value_error(key)
 
         return value
 
-    def get_string(self, key) -> Optional[str]:
+    def get(self, key) -> Optional[str]:
         """
         returns an optional string value from configuration
         """
         return self._get_value(key)
 
-    def require_string(self, key) -> str:
+    def require(self, key) -> str:
         """
         returns a string value if key is found by key or exception if not
         """
-        value = self.get_string(key)
+        value = self.get(key)
         if value is None:
             raise self._missing_value_error(key)
 

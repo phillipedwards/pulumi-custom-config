@@ -21,9 +21,9 @@ defaults_config_path = "./environments/{env}/defaults.yaml"
 Example # 1 - Retrieve value of our EC2 instance type by key, from the stack specific config. an AMI ID from the defaults.yaml file will then be retrieved. 
 """
 ec2_config = custom_config.CustomConfig("ec2")
-print(f"Retrieving value from {stack_config_path}::instance-type: ", ec2_config.get_string("instance-type"))
+print(f"Retrieving value from {stack_config_path}::instance-type: ", ec2_config.get("instance-type"))
 
-print(f"Retrieving value from {defaults_config_path}::ami-id: ", ec2_config.get_string("ami-id"))
+print(f"Retrieving value from {defaults_config_path}::ami-id: ", ec2_config.get("ami-id"))
 
 print(f"Retrieving value from {stack_config_path}::tags: ", ec2_config.require_object("tags"))
 
@@ -38,12 +38,12 @@ print(f"Retrieving value from {defaults_config_path}::ecs memory", ecs_config.ge
 Example #3 - Retrieve value of an array of VPCs ID, and subnet IDs
 """
 vpc_config = custom_config.CustomConfig("vpc")
-print(f"Retrieving value from {defaults_config_path}::vpcid", vpc_config.get_string("vpcids"))
+print(f"Retrieving value from {defaults_config_path}::vpcid", vpc_config.get("vpcids"))
 
 print(f"Retrieving value from {defaults_config_path}::subnet ids", vpc_config.get_object("subnet-ids"))
 
 """This should fail if key is not present or if value is not valid boolean"""
-print(f"Require bool value from {defaults_config_path}::is-public-facing", vpc_config.require_boolean("is-public-facing"))
+print(f"Require bool value from {defaults_config_path}::is-public-facing", vpc_config.require_bool("is-public-facing"))
 
 sg = ec2.SecurityGroup("sec-grp-for-ec2", 
     description="security group",
@@ -59,7 +59,7 @@ ami = ec2.get_ami(
 )
 
 instance = ec2.Instance("instance",
-    instance_type=ec2_config.get_string("instance-type"),
+    instance_type=ec2_config.get("instance-type"),
     ami=ami.id,
     vpc_security_group_ids=[sg.id],
 )
